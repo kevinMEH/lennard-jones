@@ -1,42 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <strings.h>
+#include <string.h>
 #include <math.h>
-#include <time.h>
-#include "src/random.h"
+#include "random.h"
+#include "lennard_jones.h"
 
-#define TOTAL_PARTICLES 64
-#define MOVE_PARTICLES 3
-
-#define BOUNDING_BOX_SIZE 4.0
-#define HALF_BOUNDING_BOX_SIZE BOUNDING_BOX_SIZE/2
-
-/**
- * Temperature means, if the increase in potential is equal to ln(2) * temperature,
- * then we have a 1/2 chance of accepting this new state. If the increase in
- * Potential is equal to 2 * ln(2) * temperature, then we have a 1/4 chance of
- * accepting this new state. Etc. ln(2) = 0.693
-*/
-#define TEMPERATURE 25
-#define COOLING_FACTOR 0.999
-#define STANDARD_DEVIATION 0.15
-#define BATCH_SIZE 1000
-#define ALLOWED_STRIKES 5 // Default 1 strike = no allowance.
-
-double temperature = TEMPERATURE;
-double cooling_factor = COOLING_FACTOR;
-double standard_deviation = STANDARD_DEVIATION;
-
-double changeTemperature(double previousTemperature) {
+double changeTemperature(double previousTemperature, double cooling_factor) {
     return previousTemperature * cooling_factor;
 }
-
-typedef struct Particle {
-    double x;
-    double y;
-    double z;
-    double* potentials; // Array of potentials to other particles
-} Particle;
 
 // Sigma = 1, epsilon = 1
 double lennardJonesPotential(Particle* __restrict first, Particle* __restrict second) {
@@ -57,7 +28,7 @@ void recalculatePotential(Particle* particles, int selfIndex) {
     self->potentials[selfIndex] = 0;
 }
 
-void moveParticle(Particle* particle) {
+void moveParticle(Particle* particle, double standard_deviation) {
     particle->x = fmin(HALF_BOUNDING_BOX_SIZE,
         fmax(-HALF_BOUNDING_BOX_SIZE,
             particle->x + xorshiftNormal(0, standard_deviation)));
@@ -113,13 +84,7 @@ void randomizeParticles(Particle* particles) {
     }
 }
 
-typedef struct SimulationResults {
-    double bestPotential;
-    int totalConvergingBatches;
-    double acceptanceRate;
-} SimulationResults;
-
-SimulationResults simulateAnnealing() {
+SimulationResults simulateAnnealing(double temperature, const double cooling_factor, const double standard_deviation) {
     Particle particles[TOTAL_PARTICLES];
     double* potentialsBlock = (double*) calloc(TOTAL_PARTICLES * TOTAL_PARTICLES, sizeof(double));
     particles[0].potentials = potentialsBlock;
@@ -154,6 +119,7 @@ SimulationResults simulateAnnealing() {
     double bestBatchPotential = lastPotential;
     int totalBatches = 0;
     int acceptCount = 0;
+    int convergingAcceptCount = 0; // Acceptance count during the converging process
     int strikes = 0;
     
     while(1) {
@@ -162,16 +128,17 @@ SimulationResults simulateAnnealing() {
         for(int i = 0; i < BATCH_SIZE; i++) {
             unsigned long long changed = 0;
             for(int i = 0; i < MOVE_PARTICLES; i++) {
-                #if TOTAL_PARTICLES != MOVE_PARTICLES
-                int indexToMove = xorshiftDouble() * TOTAL_PARTICLES;
-                while(changed & (1ULL << indexToMove)) {
+                int indexToMove;
+                if(TOTAL_PARTICLES != MOVE_PARTICLES) {
                     indexToMove = xorshiftDouble() * TOTAL_PARTICLES;
+                    while(changed & (1ULL << indexToMove)) {
+                        indexToMove = xorshiftDouble() * TOTAL_PARTICLES;
+                    }
+                    changed = changed | (1ULL << indexToMove);
+                } else {
+                    indexToMove = i;
                 }
-                changed = changed | (1ULL << indexToMove);
-                #else
-                int indexToMove = i;
-                #endif
-                moveParticle(&modifiedParticles[indexToMove]);
+                moveParticle(&modifiedParticles[indexToMove], standard_deviation);
                 recalculatePotential(modifiedParticles, indexToMove);
             }
             double modifiedPotential = totalPotential(modifiedParticles);
@@ -186,7 +153,7 @@ SimulationResults simulateAnnealing() {
             } else {
                 copyOverAllParticles(particles, modifiedParticles);
             }
-            temperature = changeTemperature(temperature);
+            temperature = changeTemperature(temperature, cooling_factor);
             currentBatchTotalPotential += lastPotential;
         }
         double currentBatchPotential = currentBatchTotalPotential / BATCH_SIZE;
@@ -196,6 +163,7 @@ SimulationResults simulateAnnealing() {
         } else {
             strikes = 0;
             bestBatchPotential = currentBatchPotential;
+            convergingAcceptCount = acceptCount;
         }
     }
     
@@ -203,28 +171,8 @@ SimulationResults simulateAnnealing() {
     free(modifiedPotentialsBlock);
     free(bestPotentialsBlock);
     return (SimulationResults) {
-        bestPotential,
+        bestPotential / 2, // We count each potential twice
         totalBatches - ALLOWED_STRIKES,
-        (double) acceptCount / (BATCH_SIZE * totalBatches)
+        (double) convergingAcceptCount / ((totalBatches - ALLOWED_STRIKES) * BATCH_SIZE)
     };
-}
-
-int main() {
-    #if TOTAL_PARTICLES > 64
-    printf("Bitmap cannot represent more than 64 particles. Use an array instead.");
-    exit(1);
-    #endif
-    #if MOVE_PARTICLES > TOTAL_PARTICLES/2
-    #if MOVE_PARTICLES != TOTAL_PARTICLES/2
-    printf("Keep the amount of moving particles below 50\% of the total particles.");
-    printf("The slowdown is approximately 1/(1 - move/total).");
-    #endif
-    #endif
-
-    setXorshiftState((uint64_t) 11992933392989292238ULL, (uint64_t) 995759136711242123ULL + time(0) * time(0) * time(0));
-
-    SimulationResults result = simulateAnnealing();
-    printf("Best potential: %lf\n", result.bestPotential);
-    printf("Converging batches: %d\n", result.totalConvergingBatches);
-    printf("Acceptance rate: %lf\n", result.acceptanceRate);
 }
