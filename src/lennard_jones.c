@@ -5,6 +5,8 @@
 #include "random.h"
 #include "lennard_jones.h"
 
+#define LARGE_MOVE_SIZE 0
+
 double changeTemperature(double previousTemperature, double cooling_factor) {
     return previousTemperature * cooling_factor;
 }
@@ -126,6 +128,8 @@ SimulationResults simulateAnnealing(double temperature, const double cooling_fac
         totalBatches++;
         double currentBatchTotalPotential = 0.0;
         for(int i = 0; i < BATCH_SIZE; i++) {
+
+            #if LARGE_MOVE_SIZE == 0
             unsigned long long changed = 0;
             for(int i = 0; i < MOVE_PARTICLES; i++) {
                 int indexToMove;
@@ -141,6 +145,23 @@ SimulationResults simulateAnnealing(double temperature, const double cooling_fac
                 moveParticle(&modifiedParticles[indexToMove], standard_deviation);
                 recalculatePotential(modifiedParticles, indexToMove);
             }
+            #else
+            unsigned long long changed = 0; // 1 = don't move, 0 = move
+            for(int i = 0; i < TOTAL_PARTICLES - MOVE_PARTICLES; i++) {
+                int indexToMove = xorshiftDouble() * TOTAL_PARTICLES;
+                while(changed & (1ULL << indexToMove)) {
+                    indexToMove = xorshiftDouble() * TOTAL_PARTICLES;
+                }
+                changed = changed | (1ULL << indexToMove);
+            }
+            for(int i = 0; i < TOTAL_PARTICLES; i++) {
+                if((changed & (1ULL << i)) == 0) {
+                    moveParticle(&modifiedParticles[i], standard_deviation);
+                    recalculatePotential(modifiedParticles, i);
+                }
+            }
+            #endif
+
             double modifiedPotential = totalPotential(modifiedParticles);
             if(shouldMove(modifiedPotential - lastPotential, temperature)) {
                 copyOverAllParticles(modifiedParticles, particles);
