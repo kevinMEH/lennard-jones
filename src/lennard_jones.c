@@ -7,8 +7,8 @@
 
 #define LARGE_MOVE_SIZE 0
 
-double changeTemperature(double previousTemperature, double cooling_factor) {
-    return previousTemperature * cooling_factor;
+double changeTemperature(double previousTemperature, double coolingFactor) {
+    return previousTemperature * coolingFactor;
 }
 
 // Sigma = 1, epsilon = 1
@@ -30,16 +30,16 @@ void recalculatePotential(Particle* particles, int selfIndex) {
     self->potentials[selfIndex] = 0;
 }
 
-void moveParticle(Particle* particle, double standard_deviation) {
+void moveParticle(Particle* particle, double standardDeviation) {
     particle->x = fmin(HALF_BOUNDING_BOX_SIZE,
         fmax(-HALF_BOUNDING_BOX_SIZE,
-            particle->x + xorshiftNormal(0, standard_deviation)));
+            particle->x + xorshiftNormal(0, standardDeviation)));
     particle->y = fmin(HALF_BOUNDING_BOX_SIZE,
         fmax(-HALF_BOUNDING_BOX_SIZE,
-            particle->y + xorshiftNormal(0, standard_deviation)));
+            particle->y + xorshiftNormal(0, standardDeviation)));
     particle->z = fmin(HALF_BOUNDING_BOX_SIZE,
         fmax(-HALF_BOUNDING_BOX_SIZE,
-            particle->z + xorshiftNormal(0, standard_deviation)));
+            particle->z + xorshiftNormal(0, standardDeviation)));
 }
 
 double totalPotential(Particle* particles) {
@@ -86,7 +86,7 @@ void randomizeParticles(Particle* particles) {
     }
 }
 
-SimulationResults simulateAnnealing(double temperature, const double cooling_factor, const double standard_deviation) {
+SimulationResults simulateAnnealing(const int moveParticles, double temperature, const double coolingFactor, const double standardDeviation) {
     Particle particles[TOTAL_PARTICLES];
     double* potentialsBlock = (double*) calloc(TOTAL_PARTICLES * TOTAL_PARTICLES, sizeof(double));
     particles[0].potentials = potentialsBlock;
@@ -131,9 +131,9 @@ SimulationResults simulateAnnealing(double temperature, const double cooling_fac
 
             #if LARGE_MOVE_SIZE == 0
             unsigned long long changed = 0;
-            for(int i = 0; i < MOVE_PARTICLES; i++) {
+            for(int i = 0; i < moveParticles; i++) {
                 int indexToMove;
-                if(TOTAL_PARTICLES != MOVE_PARTICLES) {
+                if(TOTAL_PARTICLES != moveParticles) {
                     indexToMove = xorshiftDouble() * TOTAL_PARTICLES;
                     while(changed & (1ULL << indexToMove)) {
                         indexToMove = xorshiftDouble() * TOTAL_PARTICLES;
@@ -142,12 +142,12 @@ SimulationResults simulateAnnealing(double temperature, const double cooling_fac
                 } else {
                     indexToMove = i;
                 }
-                moveParticle(&modifiedParticles[indexToMove], standard_deviation);
+                moveParticle(&modifiedParticles[indexToMove], standardDeviation);
                 recalculatePotential(modifiedParticles, indexToMove);
             }
             #else
             unsigned long long changed = 0; // 1 = don't move, 0 = move
-            for(int i = 0; i < TOTAL_PARTICLES - MOVE_PARTICLES; i++) {
+            for(int i = 0; i < TOTAL_PARTICLES - moveParticles; i++) {
                 int indexToMove = xorshiftDouble() * TOTAL_PARTICLES;
                 while(changed & (1ULL << indexToMove)) {
                     indexToMove = xorshiftDouble() * TOTAL_PARTICLES;
@@ -156,7 +156,7 @@ SimulationResults simulateAnnealing(double temperature, const double cooling_fac
             }
             for(int i = 0; i < TOTAL_PARTICLES; i++) {
                 if((changed & (1ULL << i)) == 0) {
-                    moveParticle(&modifiedParticles[i], standard_deviation);
+                    moveParticle(&modifiedParticles[i], standardDeviation);
                     recalculatePotential(modifiedParticles, i);
                 }
             }
@@ -174,7 +174,7 @@ SimulationResults simulateAnnealing(double temperature, const double cooling_fac
             } else {
                 copyOverAllParticles(particles, modifiedParticles);
             }
-            temperature = changeTemperature(temperature, cooling_factor);
+            temperature = changeTemperature(temperature, coolingFactor);
             currentBatchTotalPotential += lastPotential;
         }
         double currentBatchPotential = currentBatchTotalPotential / BATCH_SIZE;

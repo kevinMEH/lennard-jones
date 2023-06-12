@@ -2,7 +2,6 @@
 #define LENNARD_JONES
 
 extern int TOTAL_PARTICLES;
-extern int MOVE_PARTICLES;
 
 extern int BATCH_SIZE;
 extern int ALLOWED_STRIKES;
@@ -23,6 +22,6 @@ typedef struct SimulationResults {
     double convergingAcceptanceRate;
 } SimulationResults;
 
-SimulationResults simulateAnnealing(double temperature, double cooling_factor, double standard_deviation);
+SimulationResults simulateAnnealing(int moveParticles, double temperature, double coolingFactor, double standardDeviation);
 
 #endif
