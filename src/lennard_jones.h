@@ -1,6 +1,8 @@
 #ifndef LENNARD_JONES
 #define LENNARD_JONES
 
+#define MULTI_THREADED 1
+
 extern int TOTAL_PARTICLES;
 
 extern int BATCH_SIZE;
@@ -20,8 +22,15 @@ typedef struct SimulationResults {
     double bestPotential;
     int convergingBatches;
     double convergingAcceptanceRate;
+    int convergingParticleComputations;
 } SimulationResults;
 
-SimulationResults simulateAnnealing(int moveParticles, double temperature, double coolingFactor, double standardDeviation);
+#if MULTI_THREADED == 1
+#include "random.h"
+SimulationResults simulateAnnealing(XorshiftState* state, int moveParticles, double temperature, double temperatureCoolingFactor, double particleCoolingFactor, double standardDeviation);
+#else
+SimulationResults simulateAnnealing(int moveParticles, double temperature, double temperatureCoolingFactor, double particleCoolingFactor, double standardDeviation);
+#endif
+
 
 #endif
