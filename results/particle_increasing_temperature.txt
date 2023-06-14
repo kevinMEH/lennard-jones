@@ -1,0 +1,246 @@
+Box size: 4.000000
+Temperature: 25 * moveParticles
+Standard deviation: 0.100000
+Sample size: 1000
+
+
+Move particles: 1
+Temperature: 25.000000
+Best best potential: -309.395976
+Best potentials mean: -294.673218
+Best potentials sample STD: 4.628491
+Converging batches mean: 237.422000
+Converging batches sample STD: 89.529031
+Converging acceptance rate mean: 0.013364
+Converging acceptance rate sample STD: 0.004710
+
+Move particles: 2
+Temperature: 50.000000
+Best best potential: -295.861818
+Best potentials mean: -282.384676
+Best potentials sample STD: 5.046237
+Converging batches mean: 90.815000
+Converging batches sample STD: 29.546502
+Converging acceptance rate mean: 0.021177
+Converging acceptance rate sample STD: 0.006936
+
+Move particles: 3
+Temperature: 75.000000
+Best best potential: -287.162048
+Best potentials mean: -271.268228
+Best potentials sample STD: 5.819827
+Converging batches mean: 68.202000
+Converging batches sample STD: 20.948318
+Converging acceptance rate mean: 0.021287
+Converging acceptance rate sample STD: 0.007007
+
+Move particles: 4
+Temperature: 100.000000
+Best best potential: -279.146568
+Best potentials mean: -259.698374
+Best potentials sample STD: 6.493999
+Converging batches mean: 57.217000
+Converging batches sample STD: 18.084550
+Converging acceptance rate mean: 0.019960
+Converging acceptance rate sample STD: 0.006755
+
+Move particles: 5
+Temperature: 125.000000
+Best best potential: -271.572189
+Best potentials mean: -249.483858
+Best potentials sample STD: 6.737986
+Converging batches mean: 51.304000
+Converging batches sample STD: 16.541439
+Converging acceptance rate mean: 0.018011
+Converging acceptance rate sample STD: 0.006147
+
+Move particles: 6
+Temperature: 150.000000
+Best best potential: -261.913231
+Best potentials mean: -239.293847
+Best potentials sample STD: 7.394734
+Converging batches mean: 45.713000
+Converging batches sample STD: 15.815143
+Converging acceptance rate mean: 0.016724
+Converging acceptance rate sample STD: 0.006339
+
+Move particles: 7
+Temperature: 175.000000
+Best best potential: -256.308463
+Best potentials mean: -230.264967
+Best potentials sample STD: 7.716768
+Converging batches mean: 41.527000
+Converging batches sample STD: 14.295791
+Converging acceptance rate mean: 0.015088
+Converging acceptance rate sample STD: 0.005517
+
+Move particles: 8
+Temperature: 200.000000
+Best best potential: -244.305539
+Best potentials mean: -221.954412
+Best potentials sample STD: 7.963930
+Converging batches mean: 38.123000
+Converging batches sample STD: 13.026802
+Converging acceptance rate mean: 0.013771
+Converging acceptance rate sample STD: 0.005237
+
+Move particles: 9
+Temperature: 225.000000
+Best best potential: -237.112162
+Best potentials mean: -213.761847
+Best potentials sample STD: 8.106295
+Converging batches mean: 34.332000
+Converging batches sample STD: 11.782045
+Converging acceptance rate mean: 0.012915
+Converging acceptance rate sample STD: 0.005059
+
+Move particles: 10
+Temperature: 250.000000
+Best best potential: -227.636019
+Best potentials mean: -206.013382
+Best potentials sample STD: 9.057602
+Converging batches mean: 31.682000
+Converging batches sample STD: 11.073550
+Converging acceptance rate mean: 0.011780
+Converging acceptance rate sample STD: 0.004661
+
+Move particles: 11
+Temperature: 275.000000
+Best best potential: -223.420446
+Best potentials mean: -199.058936
+Best potentials sample STD: 10.068908
+Converging batches mean: 30.067000
+Converging batches sample STD: 10.743087
+Converging acceptance rate mean: 0.010916
+Converging acceptance rate sample STD: 0.004525
+
+Move particles: 12
+Temperature: 300.000000
+Best best potential: -217.083746
+Best potentials mean: -191.986160
+Best potentials sample STD: 11.628430
+Converging batches mean: 29.210000
+Converging batches sample STD: 10.100491
+Converging acceptance rate mean: 0.009768
+Converging acceptance rate sample STD: 0.004041
+
+Move particles: 13
+Temperature: 325.000000
+Best best potential: -215.239382
+Best potentials mean: -185.792933
+Best potentials sample STD: 13.464066
+Converging batches mean: 29.434000
+Converging batches sample STD: 10.354267
+Converging acceptance rate mean: 0.008615
+Converging acceptance rate sample STD: 0.003493
+
+Move particles: 14
+Temperature: 350.000000
+Best best potential: -212.101735
+Best potentials mean: -175.806124
+Best potentials sample STD: 17.897409
+Converging batches mean: 27.936000
+Converging batches sample STD: 9.788346
+Converging acceptance rate mean: 0.008138
+Converging acceptance rate sample STD: 0.003201
+
+Move particles: 15
+Temperature: 375.000000
+Best best potential: -209.463253
+Best potentials mean: -167.809504
+Best potentials sample STD: 24.637721
+Converging batches mean: 28.432000
+Converging batches sample STD: 10.267950
+Converging acceptance rate mean: 0.007231
+Converging acceptance rate sample STD: 0.002838
+
+Move particles: 16
+Temperature: 400.000000
+Best best potential: -202.326436
+Best potentials mean: -157.356313
+Best potentials sample STD: 27.426122
+Converging batches mean: 27.575000
+Converging batches sample STD: 10.150833
+Converging acceptance rate mean: 0.006890
+Converging acceptance rate sample STD: 0.002847
+
+Move particles: 17
+Temperature: 425.000000
+Best best potential: -194.723675
+Best potentials mean: -143.214330
+Best potentials sample STD: 38.058480
+Converging batches mean: 27.140000
+Converging batches sample STD: 10.095361
+Converging acceptance rate mean: 0.006396
+Converging acceptance rate sample STD: 0.002415
+
+Move particles: 18
+Temperature: 450.000000
+Best best potential: -191.772076
+Best potentials mean: -129.626697
+Best potentials sample STD: 51.048473
+Converging batches mean: 26.954000
+Converging batches sample STD: 9.899287
+Converging acceptance rate mean: 0.006011
+Converging acceptance rate sample STD: 0.002447
+
+Move particles: 19
+Temperature: 475.000000
+Best best potential: -189.323208
+Best potentials mean: -110.401019
+Best potentials sample STD: 57.128724
+Converging batches mean: 26.586000
+Converging batches sample STD: 10.106272
+Converging acceptance rate mean: 0.005656
+Converging acceptance rate sample STD: 0.002230
+
+Move particles: 20
+Temperature: 500.000000
+Best best potential: -188.133154
+Best potentials mean: -92.426481
+Best potentials sample STD: 70.626138
+Converging batches mean: 26.274000
+Converging batches sample STD: 10.033025
+Converging acceptance rate mean: 0.005401
+Converging acceptance rate sample STD: 0.002202
+
+Move particles: 21
+Temperature: 525.000000
+Best best potential: -179.788297
+Best potentials mean: -71.013717
+Best potentials sample STD: 94.903629
+Converging batches mean: 26.140000
+Converging batches sample STD: 9.948838
+Converging acceptance rate mean: 0.005066
+Converging acceptance rate sample STD: 0.002036
+
+Move particles: 22
+Temperature: 550.000000
+Best best potential: -175.023974
+Best potentials mean: -39.737680
+Best potentials sample STD: 122.689688
+Converging batches mean: 25.152000
+Converging batches sample STD: 9.899237
+Converging acceptance rate mean: 0.004964
+Converging acceptance rate sample STD: 0.001957
+
+Move particles: 23
+Temperature: 575.000000
+Best best potential: -180.287418
+Best potentials mean: -14.309916
+Best potentials sample STD: 131.578058
+Converging batches mean: 24.758000
+Converging batches sample STD: 9.926428
+Converging acceptance rate mean: 0.004825
+Converging acceptance rate sample STD: 0.001937
+
+Move particles: 24
+Temperature: 600.000000
+Best best potential: -168.493445
+Best potentials mean: 19.272318
+Best potentials sample STD: 184.633275
+Converging batches mean: 25.131000
+Converging batches sample STD: 10.047427
+Converging acceptance rate mean: 0.004522
+Converging acceptance rate sample STD: 0.001764
+
