@@ -4,16 +4,8 @@
 #include "random.h"
 #include "lennard_jones.h"
 
-#define LARGE_MOVE_SIZE 0
-#define PARTICLE_GEOMETRIC_COOLING 1
-#define MULTI_THREADED 1
-
-double changeMoveParticles(double previousMoveParticlesDouble, double coolingFactor) {
-    return previousMoveParticlesDouble * coolingFactor;
-}
-
-double changeTemperature(double previousTemperature, double coolingFactor) {
-    return previousTemperature * coolingFactor;
+double changeGeometric(double previous, double factor) {
+    return previous * factor;
 }
 
 // Sigma = 1, epsilon = 1
@@ -35,19 +27,7 @@ void recalculatePotential(Particle* particles, int selfIndex) {
     self->potentials[selfIndex] = 0;
 }
 
-void moveParticle(Particle* particle, double standardDeviation) {
-    particle->x = fmin(HALF_BOUNDING_BOX_SIZE,
-        fmax(-HALF_BOUNDING_BOX_SIZE,
-            particle->x + xorshiftNormal(0, standardDeviation)));
-    particle->y = fmin(HALF_BOUNDING_BOX_SIZE,
-        fmax(-HALF_BOUNDING_BOX_SIZE,
-            particle->y + xorshiftNormal(0, standardDeviation)));
-    particle->z = fmin(HALF_BOUNDING_BOX_SIZE,
-        fmax(-HALF_BOUNDING_BOX_SIZE,
-            particle->z + xorshiftNormal(0, standardDeviation)));
-}
-
-void moveParticleState(XorshiftState* state, Particle* particle, double standardDeviation) {
+void moveParticle(XorshiftState* state, Particle* particle, double standardDeviation) {
     particle->x = fmin(HALF_BOUNDING_BOX_SIZE,
         fmax(-HALF_BOUNDING_BOX_SIZE,
             particle->x + xorshiftNormalState(state, 0, standardDeviation)));
@@ -70,11 +50,7 @@ double totalPotential(Particle* particles) {
     return total;
 }
 
-int shouldMove(double changePotential, double temperature) {
-    return xorshiftDouble() < (1 / exp(changePotential / temperature));
-}
-
-int shouldMoveState(XorshiftState* state, double changePotential, double temperature) {
+int shouldMove(XorshiftState* state, double changePotential, double temperature) {
     return xorshiftDoubleState(state) < (1 / exp(changePotential / temperature));
 }
 
@@ -90,24 +66,7 @@ void copyOverAllParticles(Particle* __restrict source, Particle* __restrict dest
     }
 }
 
-void randomizeParticles(Particle* particles) {
-    double* potentialsBlock = particles[0].potentials;
-    // Initialize particles randomly in initial box
-    for(int i = 0; i < TOTAL_PARTICLES; i++) {
-        particles[i] = (Particle) {
-            (xorshiftDouble() * BOUNDING_BOX_SIZE - HALF_BOUNDING_BOX_SIZE),
-            (xorshiftDouble() * BOUNDING_BOX_SIZE - HALF_BOUNDING_BOX_SIZE),
-            (xorshiftDouble() * BOUNDING_BOX_SIZE - HALF_BOUNDING_BOX_SIZE),
-            &potentialsBlock[i * TOTAL_PARTICLES],
-        };
-    }
-    // Initial potential calculation
-    for(int i = 0; i < TOTAL_PARTICLES; i++) {
-        recalculatePotential(particles, i);
-    }
-}
-
-void randomizeParticlesState(XorshiftState* state, Particle* particles) {
+void randomizeParticles(XorshiftState* state, Particle* particles) {
     double* potentialsBlock = particles[0].potentials;
     // Initialize particles randomly in initial box
     for(int i = 0; i < TOTAL_PARTICLES; i++) {
@@ -124,20 +83,15 @@ void randomizeParticlesState(XorshiftState* state, Particle* particles) {
     }
 }
 
-#if MULTI_THREADED == 1
-SimulationResults simulateAnnealing(XorshiftState* state, int moveParticles, double temperature, const double temperatureCoolingFactor, const double particleCoolingFactor, const double standardDeviation) {
-#else
-SimulationResults simulateAnnealing(int moveParticles, double temperature, const double temperatureCoolingFactor, const double particleCoolingFactor, const double standardDeviation) {
-#endif
+SimulationResults simulateAnnealing(XorshiftState* state,
+int moveParticles, const double particleFactor,
+double temperature, const double temperatureFactor,
+double standardDeviation, const double standardDeviationFactor,
+double* bestPotentialRecord, double* acceptanceRateRecord) {
     Particle particles[TOTAL_PARTICLES];
     double* potentialsBlock = (double*) calloc(TOTAL_PARTICLES * TOTAL_PARTICLES, sizeof(double));
     particles[0].potentials = potentialsBlock;
-
-    #if MULTI_THREADED == 1
-    randomizeParticlesState(state, particles);
-    #else
-    randomizeParticles(particles);
-    #endif
+    randomizeParticles(state, particles);
     
     // Modified particles: These are the particles we will modify, and then copy
     // to the source if the SA process succeeds
@@ -152,6 +106,7 @@ SimulationResults simulateAnnealing(int moveParticles, double temperature, const
     bestParticles[0].potentials = bestPotentialsBlock;
     copyOverAllParticles(particles, bestParticles);
     
+
     // Start of Simulated Annealing
     /**
      * How convengence is determined: A variable n, called the BATCH_SIZE, is
@@ -177,83 +132,35 @@ SimulationResults simulateAnnealing(int moveParticles, double temperature, const
 
     int strikes = 0;
     
-    #if PARTICLE_GEOMETRIC_COOLING == 1
-    double moveParticlesReal = particleCoolingFactor == 1.0 ? moveParticles - 1 : changeMoveParticles(moveParticles, particleCoolingFactor);
-    #endif
+    double moveParticlesReal = particleFactor == 1.0 ? moveParticles - 1 : changeGeometric(moveParticles, particleFactor);
+    
+    int recordIndex = 0;
     
     while(1) {
         totalBatches++;
 
-        double currentBatchTotalPotential = 0.0;
+        double currentBatchPotential = 0.0;
         for(int i = 0; i < BATCH_SIZE; i++) {
-
-            #if LARGE_MOVE_SIZE == 0
             unsigned long long changed = 0;
             for(int i = 0; i < moveParticles; i++) {
                 int indexToMove;
                 if(TOTAL_PARTICLES != moveParticles) {
-
-                    #if MULTI_THREADED == 1
                     indexToMove = xorshiftDoubleState(state) * TOTAL_PARTICLES;
                     while(changed & (1ULL << indexToMove)) {
                         indexToMove = xorshiftDoubleState(state) * TOTAL_PARTICLES;
                     }
-                    #else
-                    indexToMove = xorshiftDouble() * TOTAL_PARTICLES;
-                    while(changed & (1ULL << indexToMove)) {
-                        indexToMove = xorshiftDouble() * TOTAL_PARTICLES;
-                    }
-                    #endif
-
                     changed = changed | (1ULL << indexToMove);
                 } else {
                     indexToMove = i;
                 }
-                #if MULTI_THREADED == 1
-                moveParticleState(state, &modifiedParticles[indexToMove], standardDeviation);
-                #else
-                moveParticle(&modifiedParticles[indexToMove], standardDeviation);
-                #endif
+                moveParticle(state, &modifiedParticles[indexToMove], standardDeviation);
                 recalculatePotential(modifiedParticles, indexToMove);
             }
-            #else
-            unsigned long long changed = 0; // 1 = don't move, 0 = move
-            for(int i = 0; i < TOTAL_PARTICLES - moveParticles; i++) {
-
-                #if MULTI_THREADED == 1
-                int indexToMove = xorshiftDoubleState(state) * TOTAL_PARTICLES;
-                while(changed & (1ULL << indexToMove)) {
-                    indexToMove = xorshiftDoubleState(state) * TOTAL_PARTICLES;
-                }
-                #else
-                int indexToMove = xorshiftDouble() * TOTAL_PARTICLES;
-                while(changed & (1ULL << indexToMove)) {
-                    indexToMove = xorshiftDouble() * TOTAL_PARTICLES;
-                }
-                #endif
-                
-                changed = changed | (1ULL << indexToMove);
-            }
-            for(int i = 0; i < TOTAL_PARTICLES; i++) {
-                if((changed & (1ULL << i)) == 0) {
-                    #if MULTI_THREADED == 1
-                    moveParticleState(state, &modifiedParticles[i], standardDeviation);
-                    #else
-                    moveParticle(&modifiedParticles[i], standardDeviation);
-                    #endif
-                    recalculatePotential(modifiedParticles, i);
-                }
-            }
-            #endif
             
             particleComputations += moveParticles;
 
             double modifiedPotential = totalPotential(modifiedParticles);
-            #if MULTI_THREADED == 1
-            if(shouldMoveState(state, modifiedPotential - lastPotential, temperature)) {
-            #else
-            if(shouldMove(modifiedPotential - lastPotential, temperature)) {
-            #endif
+            if(shouldMove(state, modifiedPotential - lastPotential, temperature * moveParticles)) {
                 copyOverAllParticles(modifiedParticles, particles);
                 lastPotential = modifiedPotential;
                 if(modifiedPotential < bestPotential) {
@@ -264,16 +171,16 @@ SimulationResults simulateAnnealing(int moveParticles, double temperature, const
             } else {
                 copyOverAllParticles(particles, modifiedParticles);
             }
-            temperature = changeTemperature(temperature, temperatureCoolingFactor);
 
-            #if PARTICLE_GEOMETRIC_COOLING == 1
-            moveParticlesReal = changeMoveParticles(moveParticlesReal, particleCoolingFactor);
+            temperature = changeGeometric(temperature, temperatureFactor);
+            moveParticlesReal = changeGeometric(moveParticlesReal, particleFactor);
             moveParticles = 1 + floor(moveParticlesReal);
-            #endif
+            standardDeviation = changeGeometric(standardDeviation, standardDeviationFactor);
 
-            currentBatchTotalPotential += lastPotential;
+            currentBatchPotential += lastPotential;
         }
-        double currentBatchPotential = currentBatchTotalPotential / BATCH_SIZE;
+
+        currentBatchPotential /= BATCH_SIZE;
         if(currentBatchPotential >= bestBatchPotential) {
             strikes++;
             if(strikes == ALLOWED_STRIKES) break;
@@ -283,15 +190,26 @@ SimulationResults simulateAnnealing(int moveParticles, double temperature, const
             convergingAcceptCount = acceptCount;
             convergingParticleComputations = particleComputations;
         }
+        
+        if(totalBatches % recordEvery == 0) {
+            if(recordIndex < recordSize) {
+                for(int i = recordIndex; i < recordSize; i++) {
+                    bestPotentialRecord[i] = currentBatchPotential / 2;
+                    acceptanceRateRecord[i] = (double) acceptCount / (totalBatches * BATCH_SIZE);
+                }
+                recordIndex++;
+            }
+        }
     }
     
     free(potentialsBlock);
     free(modifiedPotentialsBlock);
     free(bestPotentialsBlock);
+
     return (SimulationResults) {
         bestPotential / 2, // We count each potential twice
-        totalBatches - ALLOWED_STRIKES,
+        (totalBatches - ALLOWED_STRIKES) * BATCH_SIZE,
+        convergingParticleComputations,
         (double) convergingAcceptCount / ((totalBatches - ALLOWED_STRIKES) * BATCH_SIZE),
-        convergingParticleComputations
     };
 }

@@ -1,7 +1,7 @@
 #ifndef LENNARD_JONES
 #define LENNARD_JONES
 
-#define MULTI_THREADED 1
+#include "random.h"
 
 extern int TOTAL_PARTICLES;
 
@@ -10,6 +10,9 @@ extern int ALLOWED_STRIKES;
 
 extern double BOUNDING_BOX_SIZE;
 extern double HALF_BOUNDING_BOX_SIZE;
+
+extern int recordSize;
+extern int recordEvery;
 
 typedef struct Particle {
     double x;
@@ -20,17 +23,16 @@ typedef struct Particle {
 
 typedef struct SimulationResults {
     double bestPotential;
-    int convergingBatches;
-    double convergingAcceptanceRate;
+    int convergingSteps;
     int convergingParticleComputations;
+    double convergingAcceptanceRate;
 } SimulationResults;
 
-#if MULTI_THREADED == 1
-#include "random.h"
-SimulationResults simulateAnnealing(XorshiftState* state, int moveParticles, double temperature, double temperatureCoolingFactor, double particleCoolingFactor, double standardDeviation);
-#else
-SimulationResults simulateAnnealing(int moveParticles, double temperature, double temperatureCoolingFactor, double particleCoolingFactor, double standardDeviation);
-#endif
-
+SimulationResults simulateAnnealing(XorshiftState* state,
+    int moveParticles, double particleFactor,
+    double temperature, double temperatureFactor,
+    double standardDeviation, double standardDeviationFactor,
+    double* bestPotentialRecord, double* acceptanceRateRecord
+);
 
 #endif
