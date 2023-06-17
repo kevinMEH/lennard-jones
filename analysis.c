@@ -89,22 +89,15 @@ void* simulateConfiguration(void* parametersP) {
     pthread_exit(NULL);
 }
 
-int main() {
+int analysis(int moveParticles, double particleFactor, double temperature, double temperatureFactor, double standardDeviation, double standardDeviationFactor) {
     const int threadCount = 8;
-    const int countPerThread = 250;
+    const int countPerThread = 1000;
     const int totalCount = threadCount * countPerThread;
-
-    int moveParticles = 1;
-    double particleFactor = 1.0;
-    double temperature = 25;
-    double temperatureFactor = 0.999; // 0.999, 0.999684, 0.9999
-    double standardDeviation = 0.1;
-    double standardDeviationFactor = 1.0;
 
     setXorshiftState((uint64_t) 11992933392989292238ULL, (uint64_t) 995759136711242123ULL + time(0) * time(0) * time(0));
     
     char* fileName;
-    asprintf(&fileName, "./results/particle_analysis.txt");
+    asprintf(&fileName, "./results/analysis/decreasing_std/particle_analysis_%d_%lf_%lf.txt", moveParticles, temperatureFactor, standardDeviationFactor);
     file = fopen(fileName, "a+");
     free(fileName);
     
@@ -243,4 +236,28 @@ int main() {
 
     fclose(file);
     return 0;
+}
+
+int main() {
+    int moveParticlesTests[] = { 1, 2 };
+    size_t moveParticlesTestsSize = sizeof(moveParticlesTests) / sizeof(int);
+    double particleFactor = 1.0;
+    double temperature = 25;
+    double temperatureFactorTests[] = { 0.999, 0.999482, 0.999684 };
+    size_t temperatureFactorTestsSize = sizeof(temperatureFactorTests) / sizeof(double);
+    double standardDeviation = 0.1;
+    double standardDeviationFactorTests[] = { 0.999653, 0.999827 };
+    size_t standardDeviationFactorTestsSize = sizeof(standardDeviationFactorTests) / sizeof(double);
+    // 0.999653: Halve every 2000
+    // 0.999827: Halve every 4000
+    for(int i = 0; i < moveParticlesTestsSize; i++) {
+        int moveParticles = moveParticlesTests[i];
+        for(int j = 0; j < temperatureFactorTestsSize; j++) {
+            double temperatureFactor = temperatureFactorTests[j];
+            for(int k = 0; k < standardDeviationFactorTestsSize; k++) {
+                double standardDeviationFactor = standardDeviationFactorTests[k];
+                analysis(moveParticles, particleFactor, temperature, temperatureFactor, standardDeviation, standardDeviationFactor);
+            }
+        }
+    }
 }
