@@ -1,0 +1,30 @@
+Box size: 4.000000
+Sample size: 8000
+Batch size: 1000
+Allowed strikes: 2
+
+
+Starting move particles count: 2
+Move particles cooling factor: 1.000000000
+----------
+Starting temperature: 25.000000000
+Temperature cooling factor: 0.999684000
+----------
+Starting standard deviation: 0.100000000
+Standard deviation cooling factor: 1.000000000
+----------
+Best potentials mean: -283.858904620
+Best potentials sample STD: 5.273761662
+----------
+Converging steps mean: 72742.000000000
+Converging steps sample STD: 19127.112087351
+----------
+Converging particle computations mean: 145484.000000000
+Converging particle computations sample STD: 38254.224174703
+----------
+Converging acceptance rate mean: 0.077608354
+Converging acceptance rate sample STD: 0.021606365
+
+
+-176.922873,-264.964625,-275.596473,-279.086842,-280.979382,-282.089260,-282.741603,-283.104026,-283.283926,-283.368309,-283.402937,-283.417470,-283.424330,-283.426578,-283.427752,-283.427947,-283.427947,-283.427947,-283.427947,-283.427947
+0.417132,0.256916,0.173374,0.131147,0.107506,0.094498,0.087748,0.084512,0.083122,0.082560,0.082351,0.082277,0.082249,0.082239,0.082234,0.082234,0.082234,0.082234,0.082234,0.082234
