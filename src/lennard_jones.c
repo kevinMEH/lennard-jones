@@ -4,6 +4,8 @@
 #include "random.h"
 #include "lennard_jones.h"
 
+#define RECORD 0
+
 double changeGeometric(double previous, double factor) {
     return previous * factor;
 }
@@ -86,8 +88,11 @@ void randomizeParticles(XorshiftState* state, Particle* particles) {
 SimulationResults simulateAnnealing(XorshiftState* state,
 int moveParticles, const double particleFactor,
 double temperature, const double temperatureFactor,
-double standardDeviation, const double standardDeviationFactor,
-double* bestPotentialRecord, double* acceptanceRateRecord) {
+double standardDeviation, const double standardDeviationFactor
+#if RECORD == 1
+, double* bestPotentialRecord, double* acceptanceRateRecord
+#endif
+) {
     Particle particles[TOTAL_PARTICLES];
     double* potentialsBlock = (double*) calloc(TOTAL_PARTICLES * TOTAL_PARTICLES, sizeof(double));
     particles[0].potentials = potentialsBlock;
@@ -191,6 +196,7 @@ double* bestPotentialRecord, double* acceptanceRateRecord) {
             convergingParticleComputations = particleComputations;
         }
         
+        #if RECORD == 1
         if(totalBatches % recordEvery == 0) {
             if(recordIndex < recordSize) {
                 for(int i = recordIndex; i < recordSize; i++) {
@@ -200,6 +206,7 @@ double* bestPotentialRecord, double* acceptanceRateRecord) {
                 recordIndex++;
             }
         }
+        #endif
     }
     
     free(potentialsBlock);
