@@ -85,12 +85,24 @@ void randomizeParticles(XorshiftState* state, Particle* particles) {
     }
 }
 
+void shuffleIndexArray(XorshiftState* state, int* indexArray, int moveParticles) {
+    for(int i = 0; i < moveParticles; i++) {
+        int randomIndex = (int) ((TOTAL_PARTICLES - i) * xorshiftDoubleState(state)) + i;
+        int temp = indexArray[randomIndex];
+        indexArray[randomIndex] = indexArray[i];
+        indexArray[i] = temp;
+    }
+}
+
 SimulationResults simulateAnnealing(XorshiftState* state,
 int moveParticles, const double particleFactor,
 double temperature, const double temperatureFactor,
 double standardDeviation, const double standardDeviationFactor,
 LennardJonesOptions options
 ) {
+    int indexArray[TOTAL_PARTICLES];
+    for(int i = 0; i < TOTAL_PARTICLES; i++) indexArray[i] = i;
+
     int BATCH_SIZE = options.BATCH_SIZE;
     int ALLOWED_STRIKES = options.ALLOWED_STRIKES;
 
@@ -163,20 +175,10 @@ LennardJonesOptions options
 
         double currentBatchPotential = 0.0;
         for(int i = 0; i < BATCH_SIZE; i++) {
-            unsigned long long changed = 0;
+            shuffleIndexArray(state, indexArray, moveParticles);
             for(int i = 0; i < moveParticles; i++) {
-                int indexToMove;
-                if(TOTAL_PARTICLES != moveParticles) {
-                    indexToMove = xorshiftDoubleState(state) * TOTAL_PARTICLES;
-                    while(changed & (1ULL << indexToMove)) {
-                        indexToMove = xorshiftDoubleState(state) * TOTAL_PARTICLES;
-                    }
-                    changed = changed | (1ULL << indexToMove);
-                } else {
-                    indexToMove = i;
-                }
-                moveParticle(state, &modifiedParticles[indexToMove], standardDeviation);
-                recalculatePotential(modifiedParticles, indexToMove);
+                moveParticle(state, &modifiedParticles[indexArray[i]], standardDeviation);
+                recalculatePotential(modifiedParticles, indexArray[i]);
             }
             
             particleComputations += moveParticles;
