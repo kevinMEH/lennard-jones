@@ -7,9 +7,6 @@
 
 extern int TOTAL_PARTICLES;
 
-extern int BATCH_SIZE;
-extern int ALLOWED_STRIKES;
-
 extern double BOUNDING_BOX_SIZE;
 extern double HALF_BOUNDING_BOX_SIZE;
 
@@ -32,13 +29,28 @@ typedef struct SimulationResults {
     double convergingAcceptanceRate;
 } SimulationResults;
 
-SimulationResults simulateAnnealing(XorshiftState* state,
+typedef struct LennardJonesOptions {
+    #if RECORD == 1
+    double* bestPotentialRecord;
+    double* acceptanceRateRecord;
+    #endif
+
+    int warmStart;
+    int warmStartTemperature;
+    int warmStartCount;
+    
+    int BATCH_SIZE;
+    int ALLOWED_STRIKES;
+
+    double minimumImprovement;
+} LennardJonesOptions;
+
+SimulationResults simulateAnnealing(
+    XorshiftState* state,
     int moveParticles, double particleFactor,
     double temperature, double temperatureFactor,
-    double standardDeviation, double standardDeviationFactor
-    #if RECORD == 1
-    , double* bestPotentialRecord, double* acceptanceRateRecord
-    #endif
+    double standardDeviation, double standardDeviationFactor,
+    LennardJonesOptions options
 );
 
 #endif

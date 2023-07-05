@@ -1,6 +1,7 @@
 build/*
 results/*
 images/*
-./*.c
-./*.py
-./*.txt
+*.c
+*.py
+*.txt
+!main.c

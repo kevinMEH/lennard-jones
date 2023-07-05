@@ -88,11 +88,12 @@ void randomizeParticles(XorshiftState* state, Particle* particles) {
 SimulationResults simulateAnnealing(XorshiftState* state,
 int moveParticles, const double particleFactor,
 double temperature, const double temperatureFactor,
-double standardDeviation, const double standardDeviationFactor
-#if RECORD == 1
-, double* bestPotentialRecord, double* acceptanceRateRecord
-#endif
+double standardDeviation, const double standardDeviationFactor,
+LennardJonesOptions options
 ) {
+    int BATCH_SIZE = options.BATCH_SIZE;
+    int ALLOWED_STRIKES = options.ALLOWED_STRIKES;
+
     Particle particles[TOTAL_PARTICLES];
     double* potentialsBlock = (double*) calloc(TOTAL_PARTICLES * TOTAL_PARTICLES, sizeof(double));
     particles[0].potentials = potentialsBlock;
@@ -141,6 +142,22 @@ double standardDeviation, const double standardDeviationFactor
     
     int recordIndex = 0;
     
+    if(options.warmStart) {
+        for(int i = 0; i < options.warmStartCount; i++) {
+            int indexToMove = xorshiftDoubleState(state) * TOTAL_PARTICLES;
+            moveParticle(state, &modifiedParticles[indexToMove], standardDeviation);
+            recalculatePotential(modifiedParticles, indexToMove);
+
+            double modifiedPotential = totalPotential(modifiedParticles);
+            if(shouldMove(state, modifiedPotential - lastPotential, options.warmStartTemperature)) {
+                copyOverAllParticles(modifiedParticles, particles);
+                lastPotential = modifiedPotential;
+            } else {
+                copyOverAllParticles(particles, modifiedParticles);
+            }
+        }
+    }
+    
     while(1) {
         totalBatches++;
 
@@ -186,11 +203,21 @@ double standardDeviation, const double standardDeviationFactor
         }
 
         currentBatchPotential /= BATCH_SIZE;
-        if(currentBatchPotential >= bestBatchPotential) {
-            strikes++;
-            if(strikes == ALLOWED_STRIKES) break;
-        } else {
+
+        if(currentBatchPotential < bestBatchPotential - options.minimumImprovement) {
             strikes = 0;
+        } else {
+            strikes++;
+            if(strikes == ALLOWED_STRIKES) {
+                if(currentBatchPotential < bestBatchPotential) {
+                    bestBatchPotential = currentBatchPotential;
+                    convergingAcceptCount = acceptCount;
+                    convergingParticleComputations = particleComputations;
+                }
+                break;
+            }
+        }
+        if(currentBatchPotential < bestBatchPotential) {
             bestBatchPotential = currentBatchPotential;
             convergingAcceptCount = acceptCount;
             convergingParticleComputations = particleComputations;
@@ -200,8 +227,8 @@ double standardDeviation, const double standardDeviationFactor
         if(totalBatches % recordEvery == 0) {
             if(recordIndex < recordSize) {
                 for(int i = recordIndex; i < recordSize; i++) {
-                    bestPotentialRecord[i] = currentBatchPotential / 2;
-                    acceptanceRateRecord[i] = (double) acceptCount / (totalBatches * BATCH_SIZE);
+                    options.bestPotentialRecord[i] = currentBatchPotential / 2;
+                    options.acceptanceRateRecord[i] = (double) acceptCount / (totalBatches * BATCH_SIZE);
                 }
                 recordIndex++;
             }
